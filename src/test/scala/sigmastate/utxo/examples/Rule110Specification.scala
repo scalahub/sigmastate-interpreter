@@ -2,6 +2,7 @@ package sigmastate.utxo.examples
 
 import org.ergoplatform._
 import scorex.crypto.hash.Blake2b256
+import scorex.util._
 import sigmastate.Values.{BooleanConstant, ByteArrayConstant, ByteConstant, FalseLeaf, IntConstant, LongConstant, TaggedByteArray, TrueLeaf, Value}
 import sigmastate._
 import sigmastate.helpers.{ErgoLikeProvingInterpreter, SigmaTestingCommons}
@@ -386,7 +387,7 @@ class Rule110Specification extends SigmaTestingCommons {
 
 
     val hash = Blake2b256
-    val txId = hash.hash(scala.util.Random.nextString(12).getBytes)
+    val txId = hash.hash(scala.util.Random.nextString(12).getBytes).toModifierId
 
     // further we fill the genesis row as in the first example at http://mathworld.wolfram.com/Rule110.html,
     // and check that the first row (after the genesis one) is satisfying the example

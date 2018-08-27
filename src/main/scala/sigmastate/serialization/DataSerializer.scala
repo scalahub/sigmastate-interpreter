@@ -5,6 +5,7 @@ import java.math.BigInteger
 import org.ergoplatform.ErgoBox
 import org.ergoplatform.ErgoBox.NonMandatoryRegisterId
 import scorex.crypto.authds.ADDigest
+import scorex.util._
 import sigmastate.SCollection.SByteArray
 import sigmastate.Values.EvaluatedValue
 import sigmastate.utils.{ByteWriter, ByteReader}
@@ -61,7 +62,7 @@ object DataSerializer {
                       s"register R$regId is missing in the range [$startReg .. $endReg]")
         }
       }
-      w.putBytes(obj.transactionId)
+      w.putBytes(obj.transactionId.toBytes)
       w.putUShort(obj.index)
 
     case SAvlTree =>
@@ -134,7 +135,7 @@ object DataSerializer {
         val v = r.getValue().asInstanceOf[EvaluatedValue[SType]]
         (reg, v)
       }.toMap
-      val transId = r.getBytes(32)
+      val transId = r.getBytes(32).toModifierId
       val boxId = r.getUShort().toShort
       val box = ErgoBox(value, proposition, Seq(), regs, transId, boxId)
       box

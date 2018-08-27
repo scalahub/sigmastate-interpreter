@@ -7,6 +7,7 @@ import org.ergoplatform.ErgoBox.{NonMandatoryRegisterId, TokenId}
 import scorex.crypto.authds.ADKey
 import scorex.crypto.encode.Base16
 import scorex.crypto.hash.{Blake2b256, Digest32}
+import scorex.util._
 import sigmastate.Values._
 import sigmastate._
 import sigmastate.serialization.Serializer.{Consumed, Position}
@@ -43,7 +44,7 @@ class ErgoBox private(
                        override val proposition: Value[SBoolean.type],
                        override val additionalTokens: Seq[(TokenId, Long)] = Seq(),
                        override val additionalRegisters: Map[NonMandatoryRegisterId, _ <: EvaluatedValue[_ <: SType]] = Map(),
-                       val transactionId: Array[Byte],
+                       val transactionId: ModifierId,
                        val index: Short
 ) extends ErgoBoxCandidate(value, proposition, additionalTokens, additionalRegisters) {
 
@@ -55,7 +56,7 @@ class ErgoBox private(
 
   override def get(identifier: RegisterId): Option[Value[SType]] = {
     identifier match {
-      case ReferenceRegId => Some(ByteArrayConstant(transactionId ++ Shorts.toByteArray(index)))
+      case ReferenceRegId => Some(ByteArrayConstant(transactionId.toBytes ++ Shorts.toByteArray(index)))
       case _ => super.get(identifier)
     }
   }
@@ -72,7 +73,7 @@ class ErgoBox private(
   def toCandidate: ErgoBoxCandidate = new ErgoBoxCandidate(value, proposition, additionalTokens, additionalRegisters)
 
   override def toString: Idn = s"ErgoBox(${Base16.encode(id)},$value,$proposition," +
-    s"tokens: (${additionalTokens.map(t => Base16.encode(t._1)+":"+t._2)}), ${Base16.encode(transactionId)}, " +
+    s"tokens: (${additionalTokens.map(t => Base16.encode(t._1)+":"+t._2)}), $transactionId, " +
     s"$index, $additionalRegisters)"
 }
 
@@ -130,7 +131,7 @@ object ErgoBox {
             proposition: Value[SBoolean.type],
             additionalTokens: Seq[(TokenId, Long)] = Seq(),
             additionalRegisters: Map[NonMandatoryRegisterId, _ <: EvaluatedValue[_ <: SType]] = Map(),
-            transactionId: Array[Byte] = Array.fill(32)(0: Byte),
+            transactionId: ModifierId = Array.fill(32)(0: Byte).toModifierId,
             boxId: Short = 0): ErgoBox =
     new ErgoBox(value, proposition, additionalTokens, additionalRegisters, transactionId, boxId)
 

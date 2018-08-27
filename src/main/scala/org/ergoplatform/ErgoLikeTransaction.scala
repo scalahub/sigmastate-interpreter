@@ -1,8 +1,8 @@
 package org.ergoplatform
 
-import com.google.common.primitives.Shorts
 import scorex.crypto.authds.ADKey
 import scorex.crypto.hash.{Blake2b256, Digest32}
+import scorex.util._
 import sigmastate.interpreter.ProverResult
 import sigmastate.serialization.Serializer
 import sigmastate.serialization.Serializer.{Consumed, Position}
@@ -22,10 +22,10 @@ trait ErgoLikeTransactionTemplate[IT <: UnsignedInput] {
 
   require(outputCandidates.size <= Short.MaxValue)
 
-  val serializedId: Array[Byte]
+  val id: ModifierId
 
   lazy val outputs: IndexedSeq[ErgoBox] =
-    outputCandidates.indices.map(idx => outputCandidates(idx).toBox(serializedId, idx.toShort))
+    outputCandidates.indices.map(idx => outputCandidates(idx).toBox(id, idx.toShort))
 
   lazy val messageToSign: Array[Byte] =
     ErgoLikeTransaction.flattenedTxSerializer.bytesToSign(inputs.map(_.boxId), outputCandidates)
@@ -38,7 +38,7 @@ class UnsignedErgoLikeTransaction(override val inputs: IndexedSeq[UnsignedInput]
                                   override val outputCandidates: IndexedSeq[ErgoBoxCandidate])
   extends ErgoLikeTransactionTemplate[UnsignedInput] {
 
-  override lazy val serializedId: Array[Byte] = Blake2b256.hash(messageToSign)
+  override val id: ModifierId = Blake2b256.hash(messageToSign).toModifierId
 
   def toSigned(proofs: IndexedSeq[ProverResult]): ErgoLikeTransaction = {
     require(proofs.size == inputs.size)
@@ -64,11 +64,11 @@ class ErgoLikeTransaction(override val inputs: IndexedSeq[Input],
 
   require(outputCandidates.length <= Short.MaxValue, s"${Short.MaxValue} is the maximum number of outputs")
 
-  override lazy val serializedId: Array[Byte] = Blake2b256.hash(messageToSign)
+  override val id: ModifierId = Blake2b256.hash(messageToSign).toModifierId
 
   override def equals(obj: Any): Boolean = obj match {
     //we're ignoring spending proofs here
-    case tx: ErgoLikeTransaction => this.serializedId sameElements tx.serializedId
+    case tx: ErgoLikeTransaction => this.id == tx.id
     case _ => false
   }
 }
