@@ -7,15 +7,14 @@ import scala.language.implicitConversions
 import scala.language.existentials
 import com.sun.org.apache.xml.internal.serializer.ToUnknownStream
 import org.bouncycastle.math.ec.ECPoint
-
-import scalan.{Lazy, SigmaLibrary, Nullable}
+import scalan.{Lazy, Nullable, SigmaLibrary}
 import scalan.util.CollectionUtil.TraversableOps
 import org.ergoplatform._
 import scapi.sigma.ProveDiffieHellmanTuple
 import sigmastate.SCollection.SByteArray
 import sigmastate.Values.Value.Typed
 import sigmastate._
-import sigmastate.Values.{OptionValue, Constant, SValue, SigmaPropConstant, Value, ByteArrayConstant, TaggedVariableNode, SigmaBoolean, ConcreteCollection}
+import sigmastate.Values.{ByteArrayConstant, ConcreteCollection, Constant, ConstantPlaceholder, OptionValue, SValue, SigmaBoolean, SigmaPropConstant, TaggedVariableNode, Value}
 import sigmastate.interpreter.{CryptoConstants, CryptoFunctions}
 import sigmastate.lang.Terms._
 import sigmastate.lang.SigmaPredef._
@@ -31,7 +30,7 @@ import SType._
 import scorex.crypto.hash.Blake2b256.DigestSize
 import scorex.crypto.hash.{Sha256, Blake2b256}
 import sigmastate.interpreter.Interpreter.ScriptEnv
-import sigmastate.lang.{Terms, SigmaCompiler}
+import sigmastate.lang.{SigmaCompiler, Terms}
 
 trait RuntimeCosting extends SigmaLibrary with DataCosting { IR: Evaluation =>
   import Context._;
@@ -1136,6 +1135,11 @@ trait RuntimeCosting extends SigmaLibrary with DataCosting { IR: Evaluation =>
 //      case ErgoAddressToSigmaProp(input) =>
 //        val inputC = evalNode(ctx, env, input)
 //        withDefaultSize(inputC.value, inputC.cost + costOf(node))
+
+      case ConstantPlaceholder(_, tpe) =>
+        // todo make a proper Rep type
+        val res = toRep(null)(NothingElement.asElem[Null])
+        withDefaultSize(res, costOf(node))
 
       case _ =>
         error(s"Don't know how to evalNode($node)")
